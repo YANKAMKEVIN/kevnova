@@ -12,6 +12,10 @@ import { PALETTE } from './palette';
 import { MiniSprites } from './sprites';
 import type { View } from './view';
 
+/** Dimensions d'affichage : le plus grand côté de l'image vaut `size`. */
+const fit = (img: { width: number; height: number }, size: number): { w: number; h: number } =>
+  img.width >= img.height ? { w: size, h: (size * img.height) / img.width } : { w: (size * img.width) / img.height, h: size };
+
 export interface RenderOptions {
   alwaysShowHitbox: boolean;
   hiScore: number;
@@ -117,17 +121,17 @@ export class Renderer {
     for (const e of w.enemies) {
       const size = e.def.size;
       const img = this.assets.sprite(e.def.sprite, size * px);
-      const h = (size * img.height) / img.width;
+      const { w, h } = fit(img, size);
       if (e.def.spin) {
         g.save();
         g.translate(e.x, e.y);
         g.rotate(e.rot);
-        g.drawImage(img, -size / 2, -h / 2, size, h);
-        if (e.flash > 0) this.flashOver(img, -size / 2, -h / 2, size, h);
+        g.drawImage(img, -w / 2, -h / 2, w, h);
+        if (e.flash > 0) this.flashOver(img, -w / 2, -h / 2, w, h);
         g.restore();
       } else {
-        g.drawImage(img, e.x - size / 2, e.y - h / 2, size, h);
-        if (e.flash > 0) this.flashOver(img, e.x - size / 2, e.y - h / 2, size, h);
+        g.drawImage(img, e.x - w / 2, e.y - h / 2, w, h);
+        if (e.flash > 0) this.flashOver(img, e.x - w / 2, e.y - h / 2, w, h);
       }
     }
   }
@@ -146,7 +150,7 @@ export class Renderer {
     if (b.stage === 'dead') return;
     const size = b.def.size;
     const img = this.assets.sprite(b.def.sprite, size * px);
-    const h = (size * img.height) / img.width;
+    const { w, h } = fit(img, size);
     const glow = this.mini.glow(PALETTE.magenta, 128);
     const pulse = 0.5 + 0.3 * Math.sin(this.time * 0.08);
     g.globalCompositeOperation = 'lighter';
@@ -161,8 +165,8 @@ export class Renderer {
     } else if (b.stage === 'entering') {
       g.globalAlpha = Math.min(1, b.t / (BOSS_ENTRY_FRAMES * 0.5));
     }
-    g.drawImage(img, b.x - size / 2 + jx, b.y - h / 2, size, h);
-    if (b.flash > 0) this.flashOver(img, b.x - size / 2, b.y - h / 2, size, h);
+    g.drawImage(img, b.x - w / 2 + jx, b.y - h / 2, w, h);
+    if (b.flash > 0) this.flashOver(img, b.x - w / 2, b.y - h / 2, w, h);
     g.globalAlpha = 1;
     if (b.stage === 'transition') {
       g.strokeStyle = PALETTE.gold;
@@ -194,9 +198,9 @@ export class Renderer {
     g.globalCompositeOperation = 'source-over';
   }
 
-  private drawPlayer(p: PlayerState, w: World, px: number, alwaysHitbox: boolean): void {
+  private drawPlayer(p: PlayerState, world: World, px: number, alwaysHitbox: boolean): void {
     const g = this.g;
-    if (p.invuln > 0 && w.bombTimer <= 0 && Math.floor(p.invuln / 4) % 2 === 0) g.globalAlpha = 0.35;
+    if (p.invuln > 0 && world.bombTimer <= 0 && Math.floor(p.invuln / 4) % 2 === 0) g.globalAlpha = 0.35;
     // Flamme des réacteurs
     const flame = this.mini.glow(p.ship.accent, 48);
     g.globalCompositeOperation = 'lighter';
@@ -205,12 +209,12 @@ export class Renderer {
     g.globalCompositeOperation = 'source-over';
     const size = 46;
     const img = this.assets.sprite(p.ship.sprite, size * px);
-    const h = (size * img.height) / img.width;
+    const { w, h } = fit(img, size);
     const tilt = Math.max(-1, Math.min(1, p.vx / 4));
     g.save();
     g.translate(p.x, p.y);
     g.scale(1 - Math.abs(tilt) * 0.16, 1);
-    g.drawImage(img, -size / 2, -h / 2, size, h);
+    g.drawImage(img, -w / 2, -h / 2, w, h);
     g.restore();
     for (const s of satelliteOffsets(p.satellites, p.focus)) {
       const sat = this.assets.sprite('drone_pilou', 18 * px);
