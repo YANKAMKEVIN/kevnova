@@ -44,6 +44,8 @@ export class Session {
     this.renderer = new Renderer(g, assets);
     this.renderer.bg.reset();
     this.prepare();
+    const st = this.world.stage;
+    this.fx.banner = { text: st.name.toUpperCase(), sub: st.subtitle, t: 160, color: '#ffcf5a' };
   }
 
   prepare(): void {

@@ -115,6 +115,7 @@ body { overscroll-behavior: none; touch-action: none; user-select: none; -webkit
 .rank-big { font-family: var(--title); font-size: 96px; line-height: 1; margin: 6px 0; color: var(--cyan); text-shadow: 0 0 30px var(--cyan); animation: pop .6s cubic-bezier(.2, 1.6, .4, 1) both .2s; }
 .rank-big.S { color: var(--gold); text-shadow: 0 0 34px var(--gold); }
 @keyframes pop { from { transform: scale(2.2); opacity: 0; } to { transform: none; opacity: 1; } }
+.stats span { text-align: left; }
 .stats { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; width: 100%; font-size: 14px; margin: 10px 0 16px; }
 .stats b { font-family: var(--title); font-weight: 600; color: var(--gold); text-align: right; }
 .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 999px; background: rgba(255, 61, 127, .2); border: 1px solid var(--magenta); color: #ffd0de; margin: 2px; }

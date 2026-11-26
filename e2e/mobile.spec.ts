@@ -10,7 +10,7 @@ test('mobile : le glisser déplace le vaisseau et le bouton Nova fonctionne', as
   const start = (await debug(page)).world!;
   const vp = page.viewportSize()!;
   const cdp = await page.context().newCDPSession(page);
-  const touch = (type: string, x: number, y: number) =>
+  const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', x: number, y: number) =>
     cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
   await touch('touchStart', vp.width / 2, vp.height * 0.7);
   for (let i = 1; i <= 10; i++) {
