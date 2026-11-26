@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#0b0f2a" />
+    <meta name="description" content="KEVNOVA : shoot'em up vertical original. Pilote l'Étincelle à travers cinq secteurs et rallume la dernière étoile." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icone.svg" type="image/svg+xml" />
+    <title>KEVNOVA</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game" aria-label="Terrain de jeu"></canvas>
+      <div id="touch" class="touch hidden" aria-hidden="true">
+        <button id="btn-focus" class="touch-btn focus" type="button">PRÉCIS</button>
+        <button id="btn-nova" class="touch-btn nova" type="button">NOVA</button>
+      </div>
+      <button id="btn-pause" class="pause-btn hidden" type="button" aria-label="Pause">❚❚</button>
+      <div id="ui" class="ui"></div>
+      <div id="rotate" class="rotate">Tourne ton téléphone en mode portrait</div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

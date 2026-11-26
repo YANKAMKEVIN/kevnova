@@ -1,0 +1,11 @@
+{
+  "name": "KEVNOVA",
+  "short_name": "Kevnova",
+  "description": "Shoot'em up vertical original : rallume la dernière étoile.",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#0b0f2a",
+  "theme_color": "#0b0f2a",
+  "icons": [{ "src": "icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
