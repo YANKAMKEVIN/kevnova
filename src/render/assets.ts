@@ -1,3 +1,5 @@
+import { placeholder } from './fallback';
+
 /** Chargement des illustrations (WebP générés par Codex) avec repli procédural si une image manque. */
 export const IMAGE_NAMES = [
   'ship_etincelle', 'ship_lance', 'ship_gerbe', 'drone_pilou',
@@ -13,6 +15,12 @@ export const IMAGE_NAMES = [
 export type ImageName = (typeof IMAGE_NAMES)[number];
 
 export const imageUrl = (name: string): string => `${import.meta.env.BASE_URL}assets/img/${name}.webp`;
+
+/** Images absentes remplacées par un dessin procédural, exposé en data URL pour les écrans HTML. */
+const fallbackUrls = new Map<string, string>();
+
+/** URL à utiliser dans l'interface : l'illustration si elle a chargé, sinon son dessin de secours. */
+export const displayUrl = (name: string): string => fallbackUrls.get(name) ?? imageUrl(name);
 
 export type Drawable = HTMLImageElement | HTMLCanvasElement;
 
@@ -36,7 +44,9 @@ export class Assets {
               resolve();
             };
             img.onerror = () => {
-              this.images.set(name, placeholder(name));
+              const c = placeholder(name);
+              this.images.set(name, c);
+              fallbackUrls.set(name, c.toDataURL('image/webp', 0.85));
               onProgress?.(++done / IMAGE_NAMES.length);
               resolve();
             };
@@ -87,50 +97,4 @@ export class Assets {
   clearScaled(): void {
     this.scaled.clear();
   }
-}
-
-/** Dessin de secours (formes et dégradés) pour que le jeu reste jouable sans les illustrations. */
-function placeholder(name: string): HTMLCanvasElement {
-  const big = name.startsWith('fond_') || name === 'key_art' || name === 'fin';
-  const c = document.createElement('canvas');
-  c.width = big ? 512 : 128;
-  c.height = big ? 768 : 128;
-  const g = c.getContext('2d')!;
-  if (big) {
-    const grad = g.createLinearGradient(0, 0, 0, c.height);
-    grad.addColorStop(0, '#1d1b4f');
-    grad.addColorStop(1, '#0b0f2a');
-    g.fillStyle = grad;
-    g.fillRect(0, 0, c.width, c.height);
-    for (let i = 0; i < 160; i++) {
-      g.fillStyle = `rgba(255,255,255,${(i % 7) / 10})`;
-      g.fillRect((i * 97) % c.width, (i * 131) % c.height, 2, 2);
-    }
-    return c;
-  }
-  const hero = name.startsWith('ship_') || name.startsWith('drone') || name.startsWith('icone') || name.startsWith('portrait_l') || name.startsWith('portrait_p');
-  g.translate(64, 64);
-  g.fillStyle = hero ? '#f4f1ff' : '#1a1830';
-  g.strokeStyle = hero ? '#4fe3ff' : '#ff3d7f';
-  g.lineWidth = 6;
-  g.beginPath();
-  if (hero) {
-    g.moveTo(0, -54);
-    g.lineTo(46, 40);
-    g.lineTo(0, 22);
-    g.lineTo(-46, 40);
-  } else {
-    g.moveTo(0, 54);
-    g.lineTo(50, -30);
-    g.lineTo(0, -12);
-    g.lineTo(-50, -30);
-  }
-  g.closePath();
-  g.fill();
-  g.stroke();
-  g.fillStyle = hero ? '#4fe3ff' : '#ffb347';
-  g.beginPath();
-  g.arc(0, 4, 10, 0, Math.PI * 2);
-  g.fill();
-  return c;
 }

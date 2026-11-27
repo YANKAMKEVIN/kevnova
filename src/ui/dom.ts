@@ -1,9 +1,9 @@
-import { imageUrl } from '../render/assets';
+import { displayUrl } from '../render/assets';
 
 export const esc = (s: string | number): string =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-export const img = (name: string): string => imageUrl(name);
+export const img = (name: string): string => displayUrl(name);
 
 /** Remplace le contenu de la couche d'interface par un écran. */
 export function mount(root: HTMLElement, html: string, cls = 'screen dim'): HTMLElement {
