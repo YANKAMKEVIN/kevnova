@@ -27,7 +27,7 @@ jobs:
       - run: npm ci
       - name: Vérification des types
         run: npm run typecheck
-      - name: Lint (dont : aucun fichier de plus de 450 lignes)
+      - name: "Lint (dont : aucun fichier de plus de 450 lignes)"
         run: npm run lint
       - name: Tests unitaires + couverture minimale
         run: npm run test:cover
