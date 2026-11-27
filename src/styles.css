@@ -48,9 +48,10 @@ body { overscroll-behavior: none; touch-action: none; user-select: none; -webkit
 .title { justify-content: flex-end; background: var(--night); }
 .title .art { position: absolute; inset: 0; background-size: cover; background-position: center; filter: saturate(1.1); }
 .title .art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11, 15, 42, .2) 0%, rgba(11, 15, 42, 0) 35%, rgba(11, 15, 42, .55) 62%, rgba(11, 15, 42, .96) 100%); }
-.logo { position: relative; font-family: var(--title); font-weight: 800; font-size: clamp(44px, 14vw, 96px); letter-spacing: .04em; margin: 0; line-height: 1;
+.logo { position: relative; font-family: var(--title); font-weight: 800; font-size: clamp(56px, 22vw, 128px); letter-spacing: .04em; margin: 0; line-height: 1; text-align: center;
   background: linear-gradient(180deg, #ffffff 0%, #bff6ff 40%, var(--cyan) 60%, var(--gold) 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
   filter: drop-shadow(0 0 18px rgba(79, 227, 255, .55)) drop-shadow(0 4px 0 rgba(42, 19, 64, .9)); }
+.logo span { display: block; font-size: .46em; letter-spacing: .38em; margin: .12em 0 0 .38em; }
 .tagline { position: relative; margin: 8px 0 26px; color: var(--gold); letter-spacing: .32em; font-size: 12px; text-transform: uppercase; text-align: center; }
 .title .menu { position: relative; margin-bottom: 4vh; }
 .title .foot { position: relative; font-size: 11px; color: rgba(244, 241, 255, .5); margin-top: 10px; text-align: center; }

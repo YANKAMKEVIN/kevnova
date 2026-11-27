@@ -1,4 +1,4 @@
-# KEVNOVA
+# NOVA STRIKE
 
 **Shoot'em up vertical original (bullet hell), jouable dans le navigateur, sur ordinateur et sur téléphone.**
 

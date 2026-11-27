@@ -2,7 +2,7 @@
   "name": "kevnova",
   "version": "1.0.0",
   "private": true,
-  "description": "KEVNOVA : shoot'em up vertical original (bullet hell). Rallume la dernière étoile.",
+  "description": "NOVA STRIKE : shoot'em up vertical original (bullet hell). Rallume la dernière étoile.",
   "type": "module",
   "scripts": {
     "dev": "vite",

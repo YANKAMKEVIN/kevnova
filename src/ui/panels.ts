@@ -104,7 +104,7 @@ export function endingScreen(root: HTMLElement, score: number, done: () => void)
        <h2>Astrée brille à nouveau</h2>
        <p class="sub">La Flotte Éteignoir s’est dispersée. Le ciel appartient de nouveau à tout le monde.</p>
        <p style="font-size:14px;line-height:1.5">Merci d’avoir piloté l’Étincelle.<br>Score de la campagne : <b>${score.toLocaleString('fr-FR')}</b></p>
-       <p style="font-size:12px;color:rgba(244,241,255,.6)">KEVNOVA · Kevin Creations<br>Les trois vaisseaux sont débloqués : retente les secteurs en Infernal pour les rangs S.</p>
+       <p style="font-size:12px;color:rgba(244,241,255,.6)">NOVA STRIKE · Kevin Creations<br>Les trois vaisseaux sont débloqués : retente les secteurs en Infernal pour les rangs S.</p>
        <div class="row"><button class="btn primary" data-done data-autofocus>Retour au titre</button></div>
      </div>`,
     'screen ending',

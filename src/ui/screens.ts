@@ -16,7 +16,7 @@ export function titleScreen(root: HTMLElement, save: SaveData, a: TitleActions):
   const el = mount(
     root,
     `<div class="art" style="background-image:url('${img('key_art')}')"></div>
-     <h1 class="logo">KEVNOVA</h1>
+     <h1 class="logo">NOVA <span>STRIKE</span></h1>
      <p class="tagline">Rallume la dernière étoile</p>
      <div class="menu">
        <button class="btn primary" data-act="play" data-autofocus>${started ? 'Continuer' : 'Jouer'}</button>
@@ -31,7 +31,7 @@ export function titleScreen(root: HTMLElement, save: SaveData, a: TitleActions):
 }
 
 export function loadingScreen(root: HTMLElement): (k: number) => void {
-  const el = mount(root, `<h1 class="logo">KEVNOVA</h1><div class="bar"><i></i></div>`, 'screen loading');
+  const el = mount(root, `<h1 class="logo">NOVA <span>STRIKE</span></h1><div class="bar"><i></i></div>`, 'screen loading');
   const bar = el.querySelector<HTMLElement>('.bar i')!;
   return (k) => {
     bar.style.width = `${Math.round(k * 100)}%`;

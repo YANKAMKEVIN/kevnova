@@ -9,7 +9,7 @@ test('le bot termine toute la campagne jusqu’à l’écran de fin', async ({ p
   test.setTimeout(600_000);
   const errors = watchErrors(page);
   await page.goto('/?bot=1&speed=16&fresh=1&seed=5');
-  await expect(page.getByRole('heading', { name: 'KEVNOVA' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'NOVA STRIKE' })).toBeVisible();
   await page.getByRole('button', { name: 'Jouer' }).click();
   await skipDialogue(page);
 
