@@ -6,7 +6,7 @@ test('écran titre sans erreur et toutes les illustrations chargées', async ({ 
   await page.goto('/?fresh=1');
   await waitState(page, ['title']);
   const d = await debug(page);
-  expect(d.imagesLoaded).toBeGreaterThanOrEqual(19);
+  expect(d.imagesLoaded).toBeGreaterThanOrEqual(38);
   for (const name of ['Jouer', 'Secteurs', 'Hangar', 'Réglages']) await expect(page.getByRole('button', { name })).toBeVisible();
   expect(errors).toEqual([]);
 });
