@@ -4,7 +4,7 @@ export interface Debug {
   state: string;
   stage: string;
   fps: number;
-  world: { phase: string; frame: number; score: number; bullets: number; lives: number; x: number; y: number } | null;
+  world: { phase: string; frame: number; score: number; bullets: number; lives: number; bombs: number; bombsUsed: number; focus: boolean; x: number; y: number } | null;
   save: { progress: { cleared: string[]; bestScore: Record<string, number> }; wallet: { shards: number }; upgrades: Record<string, number>; ship: string };
   imagesLoaded: number;
 }
@@ -34,3 +34,6 @@ export async function skipDialogue(page: Page): Promise<void> {
   const skip = page.getByRole('button', { name: 'Passer' });
   if (await skip.isVisible().catch(() => false)) await skip.click();
 }
+
+export const replayOf = (page: Page): Promise<{ text: string; hash: string; frames: number } | null> =>
+  page.evaluate(() => (window as unknown as { __kevnova: { replay(): { text: string; hash: string; frames: number } | null } }).__kevnova.replay());

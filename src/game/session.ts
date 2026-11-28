@@ -6,6 +6,7 @@ import { Fx } from '../render/fx';
 import { Renderer } from '../render/renderer';
 import type { View } from '../render/view';
 import { Bot } from '../sim/bot';
+import { encodeReplay, ReplayRecorder, worldHash } from '../sim/replay';
 import { NO_INPUT, type StageResult } from '../sim/types';
 import { World, type WorldOptions } from '../sim/world';
 
@@ -21,6 +22,8 @@ export class Session {
   readonly fx = new Fx();
   readonly renderer: Renderer;
   private readonly bot = new Bot();
+  /** Toutes les commandes de la partie : la rejouer sur la même graine redonne la même partie. */
+  private readonly recorder: ReplayRecorder;
   private acc = 0;
   paused = false;
   private ended = false;
@@ -41,6 +44,7 @@ export class Session {
     private readonly showHitbox: boolean,
   ) {
     this.world = new World(opts);
+    this.recorder = new ReplayRecorder(opts);
     this.renderer = new Renderer(g, assets);
     this.renderer.bg.reset();
     this.prepare();
@@ -71,9 +75,11 @@ export class Session {
   private tick(): void {
     const w = this.world;
     const p = w.player;
-    const cmd = this.autopilot ? this.bot.decide(w) : this.input.read(p);
-    w.step(cmd ?? NO_INPUT);
-    if (!this.autopilot) this.input.rebaseDrag(p, cmd.target);
+    const raw = (this.autopilot ? this.bot.decide(w) : this.input.read(p)) ?? NO_INPUT;
+    // La commande quantifiée est celle qui est jouée ET enregistrée : le rejeu est exact.
+    if (!w.finished) w.step(this.recorder.record(raw));
+    else w.step(NO_INPUT);
+    if (!this.autopilot) this.input.rebaseDrag(p, raw.target);
     for (const e of w.events) {
       this.fx.handle(e);
       this.audio.handle(e);
@@ -87,6 +93,11 @@ export class Session {
       this.endDelay = w.phase === 'gameover' ? 90 : 20;
     }
     if (this.ended && this.endDelay > 0 && --this.endDelay === 0) this.hooks.onFinished(w.result());
+  }
+
+  /** Rejeu de la partie (texte partageable) et empreinte de l'état courant. */
+  replay(): { text: string; hash: string; frames: number } {
+    return { text: encodeReplay(this.recorder.finish()), hash: worldHash(this.world), frames: this.recorder.frames };
   }
 
   get assetsReady(): boolean {
