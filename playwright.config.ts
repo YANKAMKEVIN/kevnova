@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const executablePath = process.env.PW_CHROMIUM || undefined;
+/** Port du serveur de prévisualisation (PW_PORT pour éviter les collisions sur une machine partagée). */
+const port = Number(process.env.PW_PORT) || 4173;
 
 export default defineConfig({
   testDir: 'e2e',
@@ -9,7 +11,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: 'http://localhost:4173',
+    baseURL: `http://localhost:${port}`,
     trace: 'off',
     launchOptions: { executablePath },
   },
@@ -18,8 +20,8 @@ export default defineConfig({
     { name: 'mobile', use: { ...devices['Pixel 7'], launchOptions: { executablePath } }, testMatch: /mobile/ },
   ],
   webServer: {
-    command: 'npm run preview',
-    url: 'http://localhost:4173',
+    command: `npx vite preview --port ${port} --strictPort`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },
