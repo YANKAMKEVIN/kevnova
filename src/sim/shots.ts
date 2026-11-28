@@ -66,12 +66,22 @@ export interface VolleyShot {
 const SHOT_SPEED = 11;
 export { SHOT_SPEED };
 
+const volleyCache = new Map<ShipId, (readonly VolleyShot[])[]>();
+
 /**
  * Salve principale d'un vaisseau selon son niveau de puissance (1 à 5) et la concentration.
- * Fonction pure : facile à tester et à équilibrer.
+ * Fonction pure, mémorisée : le tir automatique (12 salves par seconde) n'alloue rien.
+ * Le tableau renvoyé est partagé : ne pas le modifier.
  */
-export function volley(ship: ShipId, level: number, focus: boolean): VolleyShot[] {
+export function volley(ship: ShipId, level: number, focus: boolean): readonly VolleyShot[] {
   const L = Math.max(1, Math.min(5, Math.floor(level)));
+  let table = volleyCache.get(ship);
+  if (!table) volleyCache.set(ship, (table = []));
+  const key = L * 2 + (focus ? 1 : 0);
+  return table[key] ?? (table[key] = Object.freeze(buildVolley(ship, L, focus)));
+}
+
+function buildVolley(ship: ShipId, L: number, focus: boolean): VolleyShot[] {
   const out: VolleyShot[] = [];
   const add = (dx: number, angle: number, dmg: number, kind: ShotKind, dy = 0): void => {
     out.push({ dx, dy, angle, dmg, kind });
@@ -121,8 +131,22 @@ export function volley(ship: ShipId, level: number, focus: boolean): VolleyShot[
   return out;
 }
 
-/** Position des satellites (relative au vaisseau) selon le niveau d'amélioration. */
-export function satelliteOffsets(level: number, focus: boolean): { dx: number; dy: number; angle: number }[] {
+export interface SatelliteOffset {
+  dx: number;
+  dy: number;
+  angle: number;
+}
+
+const satelliteCache: (readonly SatelliteOffset[])[] = [];
+
+/** Position des satellites (relative au vaisseau) selon le niveau d'amélioration (mémorisée, tableau partagé). */
+export function satelliteOffsets(level: number, focus: boolean): readonly SatelliteOffset[] {
+  const L = level <= 0 ? 0 : level >= 2 ? 2 : 1;
+  const key = L * 2 + (focus ? 1 : 0);
+  return satelliteCache[key] ?? (satelliteCache[key] = Object.freeze(buildSatellites(L, focus)));
+}
+
+function buildSatellites(level: number, focus: boolean): SatelliteOffset[] {
   if (level <= 0) return [];
   const spread = focus ? 16 : 30;
   const base = [

@@ -269,8 +269,10 @@ export class Renderer {
   private drawWarning(t: number): void {
     const g = this.g;
     const a = 0.25 + 0.2 * Math.sin(t * 0.25);
-    g.fillStyle = `rgba(255,61,127,${a})`;
+    g.globalAlpha = a; // plutôt qu'une chaîne rgba() reconstruite à chaque image
+    g.fillStyle = '#ff3d7f';
     g.fillRect(0, 0, FIELD_W, 8);
     g.fillRect(0, FIELD_H - 8, FIELD_W, 8);
+    g.globalAlpha = 1;
   }
 }

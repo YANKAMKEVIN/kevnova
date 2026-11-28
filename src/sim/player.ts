@@ -67,7 +67,7 @@ export function movePlayer(p: PlayerState, input: InputFrame): void {
   if (input.target) {
     const dx = input.target.x - p.x;
     const dy = input.target.y - p.y;
-    const d = Math.hypot(dx, dy);
+    const d = Math.sqrt(dx * dx + dy * dy); // Math.hypot alloue un tableau interne à chaque appel
     const max = speed * 2.2;
     if (d > 0) {
       const k = Math.min(1, max / d);
@@ -77,7 +77,7 @@ export function movePlayer(p: PlayerState, input: InputFrame): void {
   } else {
     let dx = input.dx;
     let dy = input.dy;
-    const len = Math.hypot(dx, dy);
+    const len = Math.sqrt(dx * dx + dy * dy);
     if (len > 1) {
       dx /= len;
       dy /= len;

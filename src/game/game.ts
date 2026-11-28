@@ -332,10 +332,17 @@ export class Game {
       stage: this.stage,
       fps: Math.round(this.perf.fps),
       quality: this.perf.level,
-      world: w ? { phase: w.phase, frame: w.frame, score: w.score, bullets: w.bullets.count, lives: w.player.lives, x: w.player.x, y: w.player.y } : null,
+      world: w
+        ? { phase: w.phase, frame: w.frame, score: w.score, bullets: w.bullets.count, lives: w.player.lives, bombs: w.player.bombs, bombsUsed: w.bombsUsed, focus: w.player.focus, x: w.player.x, y: w.player.y }
+        : null,
       save: this.save,
       stages: STAGES.length,
       imagesLoaded: this.assets.loaded,
     };
+  }
+
+  /** Rejeu de la partie en cours (ou de la dernière) : rejouable hors navigateur avec playReplay. */
+  replay(): { text: string; hash: string; frames: number } | null {
+    return this.session?.replay() ?? null;
   }
 }

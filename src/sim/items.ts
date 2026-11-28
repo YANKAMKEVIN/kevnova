@@ -19,18 +19,21 @@ export const MAX_ITEMS = 260;
 
 export class ItemField {
   readonly items: Item[] = [];
+  /** Objets ramassés ou sortis, recyclés au prochain `spawn`. */
+  private readonly free: Item[] = [];
 
   spawn(x: number, y: number, kind: ItemKind, spread = 1, homing = false): void {
     if (this.items.length >= MAX_ITEMS) return;
-    this.items.push({
-      x,
-      y,
-      vx: spread * Math.sin(this.items.length * 2.3) * 1.2,
-      vy: -2.2 - spread * Math.abs(Math.cos(this.items.length * 1.7)),
-      kind,
-      homing,
-      alive: true,
-    });
+    const n = this.items.length;
+    const it = this.free.pop() ?? { x: 0, y: 0, vx: 0, vy: 0, kind, homing, alive: true };
+    it.x = x;
+    it.y = y;
+    it.vx = spread * Math.sin(n * 2.3) * 1.2;
+    it.vy = -2.2 - spread * Math.abs(Math.cos(n * 1.7));
+    it.kind = kind;
+    it.homing = homing;
+    it.alive = true;
+    this.items.push(it);
   }
 
   /** Avance les objets ; appelle `collect` pour chaque objet ramassé. */
@@ -42,7 +45,7 @@ export class ItemField {
         it.homing = true;
         const dx = p.x - it.x;
         const dy = p.y - it.y;
-        const d = Math.hypot(dx, dy) || 1;
+        const d = Math.sqrt(dx * dx + dy * dy) || 1;
         const sp = 9;
         it.vx = (dx / d) * sp;
         it.vy = (dy / d) * sp;
@@ -60,7 +63,10 @@ export class ItemField {
       }
     }
     let w = 0;
-    for (const it of this.items) if (it.alive) this.items[w++] = it;
+    for (const it of this.items) {
+      if (it.alive) this.items[w++] = it;
+      else this.free.push(it);
+    }
     this.items.length = w;
   }
 
@@ -69,6 +75,7 @@ export class ItemField {
   }
 
   clear(): void {
+    for (const it of this.items) this.free.push(it);
     this.items.length = 0;
   }
 }
