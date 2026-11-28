@@ -93,11 +93,14 @@ export class Background {
         alpha: near ? 0.55 : 0.35,
       });
     }
+    // Compactage sur place : pas de nouveau tableau à chaque image.
+    let n = 0;
     for (const d of this.decos) {
       d.y += d.speed * speed;
       d.rot += d.vr;
+      if (d.y < FIELD_H + 160) this.decos[n++] = d;
     }
-    this.decos = this.decos.filter((d) => d.y < FIELD_H + 160);
+    this.decos.length = n;
   }
 
   draw(g: CanvasRenderingContext2D, assets: Assets, decoName: string, pxPerUnit: number, tint: string): void {
