@@ -1,8 +1,9 @@
 import { Rng } from '../core/rng';
 import { stageById, type StageDef } from '../data/stages';
-import { createBoss, phaseMaxHp, stepBoss, type Boss } from './boss';
+import { createBoss, phaseMaxHp, stepBoss, type Boss, type BossStepResult } from './boss';
 import { BulletField } from './bullets';
-import { resolveBullets, resolveShots, touchesEnemy } from './combat';
+import { resolveBullets, resolveShots, touchesEnemy, type BulletContact, type ShotHit } from './combat';
+import { EventPool } from './events';
 import { createEnemy, stepEnemy, type Enemy } from './enemy';
 import { ItemField, type Item } from './items';
 import { DIFFICULTY, type DifficultyScale, type PatternContext } from './patterns';
@@ -81,6 +82,9 @@ export class World {
   private nextSpawn = 0;
   private readonly ctx: PatternContext;
   private readonly hpScale: number;
+  private readonly pool = new EventPool();
+  private readonly contact: BulletContact = { hit: false, grazes: 0 };
+  private readonly bossStep: BossStepResult = { phaseEnded: false, captured: false, defeated: false, timedOut: false };
 
   constructor(opts: WorldOptions) {
     this.opts = opts;
@@ -100,6 +104,7 @@ export class World {
   /** Avance la simulation d'une image (1/60 s). */
   step(input: InputFrame): void {
     this.events.length = 0;
+    this.pool.reset();
     if (this.finished) return;
     this.frame++;
     this.phaseFrame++;
@@ -122,31 +127,24 @@ export class World {
 
     // Tirs du joueur
     const bossBefore = this.boss?.hp ?? 0;
-    resolveShots(
-      this.shots,
-      this.enemies,
-      this.boss,
-      (h) => {
-        if (this.frame % 3 === 0) this.events.push({ type: 'hit', x: h.x, y: h.y });
-      },
-      (e) => this.killEnemy(e),
-    );
+    resolveShots(this.shots, this.enemies, this.boss, this.onShotHit, this.onEnemyKilled);
     if (this.boss && this.boss.hp < bossBefore) this.score += Math.round((bossBefore - this.boss.hp) * 10);
 
-    // Ennemis et boss
-    for (const e of this.enemies) stepEnemy(e, this.ctx);
-    this.enemies = this.enemies.filter((e) => e.alive);
+    // Ennemis et boss (compactage sur place : aucun nouveau tableau par image)
+    const enemies = this.enemies;
+    let alive = 0;
+    for (let i = 0; i < enemies.length; i++) {
+      const e = enemies[i]!;
+      stepEnemy(e, this.ctx);
+      if (e.alive) enemies[alive++] = e;
+    }
+    enemies.length = alive;
     if (this.boss) this.stepBossEntity(this.boss);
 
     // Balles
     this.bullets.step();
     if (playing) {
-      const contact = resolveBullets(this.bullets, p, (x, y) => {
-        this.grazes++;
-        this.score += GRAZE_SCORE;
-        p.nova += GRAZE_NOVA;
-        if (this.grazes % 2 === 0) this.events.push({ type: 'graze', x, y });
-      });
+      const contact = resolveBullets(this.bullets, p, this.onGraze, this.contact);
       if (p.nova >= NOVA_MAX) {
         p.nova = 0;
         if (p.bombs < MAX_BOMBS) p.bombs++;
@@ -156,8 +154,22 @@ export class World {
     }
 
     // Objets
-    this.items.step(p, true, (it) => this.collect(it));
+    this.items.step(p, true, this.onCollect);
   }
+
+  // Rappels créés une seule fois (une fermeture par image ferait travailler le ramasse-miettes).
+  private readonly onShotHit = (h: ShotHit): void => {
+    if (this.frame % 3 === 0) this.events.push(this.pool.hit(h.x, h.y));
+  };
+  private readonly onEnemyKilled = (e: Enemy): void => this.killEnemy(e);
+  private readonly onCollect = (it: Item): void => this.collect(it);
+  private readonly onGraze = (x: number, y: number): void => {
+    const p = this.player;
+    this.grazes++;
+    this.score += GRAZE_SCORE;
+    p.nova += GRAZE_NOVA;
+    if (this.grazes % 2 === 0) this.events.push(this.pool.graze(x, y));
+  };
 
   private stepPhase(): void {
     const waveEnd = this.stage.duration * FPS;
@@ -197,7 +209,7 @@ export class World {
 
   private stepBossEntity(b: Boss): void {
     const wasEntering = b.stage === 'entering';
-    const r = stepBoss(b, this.ctx);
+    const r = stepBoss(b, this.ctx, this.bossStep);
     if (wasEntering && b.stage === 'fighting') {
       this.events.push({ type: 'bossPhase', name: b.def.phases[0]!.name, index: 0 });
     }
@@ -223,8 +235,8 @@ export class World {
     const p = this.player;
     if (this.hits === 0) this.score += NO_HIT_BONUS;
     this.score += p.lives * LIFE_BONUS;
-    this.enemies.forEach((e) => this.killEnemy(e));
-    this.enemies = [];
+    for (const e of this.enemies) this.killEnemy(e);
+    this.enemies.length = 0;
     this.setPhase('clearing');
   }
 
@@ -233,11 +245,15 @@ export class World {
     if (--p.fireTimer <= 0) {
       p.fireTimer = 5;
       const lvl = powerLevel(p);
-      for (const v of volley(p.ship.id, lvl, p.focus)) {
+      const vs = volley(p.ship.id, lvl, p.focus);
+      for (let i = 0; i < vs.length; i++) {
+        const v = vs[i]!;
         this.shots.spawn(p.x + v.dx, p.y - 10 + v.dy, Math.sin(v.angle) * SHOT_SPEED, -Math.cos(v.angle) * SHOT_SPEED, v.dmg, v.kind);
       }
       if (p.fireTimer === 5 && this.frame % 10 < 5) {
-        for (const s of satelliteOffsets(p.satellites, p.focus)) {
+        const sats = satelliteOffsets(p.satellites, p.focus);
+        for (let i = 0; i < sats.length; i++) {
+          const s = sats[i]!;
           this.shots.spawn(p.x + s.dx, p.y + s.dy - 6, Math.sin(s.angle) * SHOT_SPEED, -Math.cos(s.angle) * SHOT_SPEED, 0.7, ShotKind.Satellite);
         }
       }
@@ -314,7 +330,7 @@ export class World {
     this.kills++;
     this.score += e.def.score;
     const sizeK = e.def.size > 100 ? 2 : e.def.size > 60 ? 1.2 : 0.7;
-    this.events.push({ type: 'explode', x: e.x, y: e.y, size: sizeK, color: BulletColor.Magenta });
+    this.events.push(this.pool.explode(e.x, e.y, sizeK, BulletColor.Magenta));
     const r = splitShards(e.def.shards);
     this.dropShards(e.x, e.y, r.big, r.small);
     if (this.rng.chance(e.def.powerChance)) {

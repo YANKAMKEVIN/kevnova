@@ -48,24 +48,38 @@ export const phaseTimeLeft = (b: Boss): number => Math.max(0, currentPhase(b).ti
 export const isVulnerable = (b: Boss): boolean => b.stage === 'fighting';
 
 /** Point visé par chaque type de déplacement (le boss s'en approche en douceur). */
-export function moveTarget(move: BossMove, t: number): { x: number; y: number } {
+export function moveTarget(move: BossMove, t: number, out: { x: number; y: number } = { x: 0, y: 0 }): { x: number; y: number } {
   const cx = FIELD_W / 2;
   switch (move) {
     case 'hover':
-      return { x: cx + Math.sin(t * 0.011) * 34, y: 120 + Math.sin(t * 0.017) * 10 };
+      out.x = cx + Math.sin(t * 0.011) * 34;
+      out.y = 120 + Math.sin(t * 0.017) * 10;
+      break;
     case 'sweep':
-      return { x: cx + Math.sin(t * 0.012) * 115, y: 112 + Math.sin(t * 0.024) * 8 };
+      out.x = cx + Math.sin(t * 0.012) * 115;
+      out.y = 112 + Math.sin(t * 0.024) * 8;
+      break;
     case 'figure8':
-      return { x: cx + Math.sin(t * 0.01) * 105, y: 135 + Math.sin(t * 0.02) * 38 };
+      out.x = cx + Math.sin(t * 0.01) * 105;
+      out.y = 135 + Math.sin(t * 0.02) * 38;
+      break;
     case 'drift':
-      return { x: cx + Math.sin(t * 0.007) * 85 + Math.sin(t * 0.019) * 25, y: 115 + Math.sin(t * 0.011) * 22 };
+      out.x = cx + Math.sin(t * 0.007) * 85 + Math.sin(t * 0.019) * 25;
+      out.y = 115 + Math.sin(t * 0.011) * 22;
+      break;
     case 'charge': {
       const c = t % 300;
       const lunge = c > 200 ? Math.sin(((c - 200) / 100) * Math.PI) : 0;
-      return { x: cx + Math.sin(t * 0.009) * 70, y: 115 + lunge * 110 };
+      out.x = cx + Math.sin(t * 0.009) * 70;
+      out.y = 115 + lunge * 110;
+      break;
     }
   }
+  return out;
 }
+
+/** Cible réutilisée par `stepBoss` (aucune allocation par image). */
+const scratchTarget = { x: 0, y: 0 };
 
 export interface BossStepResult {
   phaseEnded: boolean;
@@ -75,8 +89,15 @@ export interface BossStepResult {
 }
 
 /** Avance le boss d'une image (déplacement, tirs, enchaînement des phases). */
-export function stepBoss(b: Boss, ctx: PatternContext): BossStepResult {
-  const res: BossStepResult = { phaseEnded: false, captured: false, defeated: false, timedOut: false };
+export function stepBoss(
+  b: Boss,
+  ctx: PatternContext,
+  res: BossStepResult = { phaseEnded: false, captured: false, defeated: false, timedOut: false },
+): BossStepResult {
+  res.phaseEnded = false;
+  res.captured = false;
+  res.defeated = false;
+  res.timedOut = false;
   b.t++;
   b.life++;
   if (b.flash > 0) b.flash--;
@@ -96,7 +117,7 @@ export function stepBoss(b: Boss, ctx: PatternContext): BossStepResult {
   }
   if (b.stage === 'dead') return res;
 
-  const target = moveTarget(phase.move, b.life);
+  const target = moveTarget(phase.move, b.life, scratchTarget);
   b.x = approach(b.x, target.x, 2.2);
   b.y = approach(b.y, target.y, 2.2);
 

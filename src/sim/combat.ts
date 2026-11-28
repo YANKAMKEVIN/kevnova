@@ -20,6 +20,9 @@ export interface ShotHit {
   y: number;
 }
 
+/** Objet d'impact réutilisé : `onHit` ne doit pas le conserver au-delà de l'appel. */
+const scratchHit: ShotHit = { enemy: null, x: 0, y: 0 };
+
 /** Oriente les missiles vers la cible la plus proche. */
 function steerMissile(s: Shot, enemies: Enemy[], boss: Boss | null): void {
   let tx = 0;
@@ -66,6 +69,7 @@ export function resolveShots(
   onKill: (e: Enemy) => void,
 ): number {
   let bossDamage = 0;
+  const hit = scratchHit;
   for (const s of shots.items) {
     if (!s.alive) continue;
     s.age++;
@@ -83,7 +87,10 @@ export function resolveShots(
         e.hp -= s.dmg;
         e.flash = 3;
         s.alive = false;
-        onHit({ enemy: e, x: s.x, y: s.y });
+        hit.enemy = e;
+        hit.x = s.x;
+        hit.y = s.y;
+        onHit(hit);
         if (e.hp <= 0) {
           e.alive = false;
           onKill(e);
@@ -94,7 +101,10 @@ export function resolveShots(
     if (s.alive && boss && hitsBoss(boss, s.x, s.y, 4) && damageBoss(boss, s.dmg)) {
       bossDamage += s.dmg;
       s.alive = false;
-      onHit({ enemy: null, x: s.x, y: s.y - SHOT_SPEED * 0.5 });
+      hit.enemy = null;
+      hit.x = s.x;
+      hit.y = s.y - SHOT_SPEED * 0.5;
+      onHit(hit);
     }
   }
   shots.compact();
@@ -111,8 +121,10 @@ export function resolveBullets(
   bullets: BulletField,
   p: PlayerState,
   onGraze: (x: number, y: number) => void,
+  res: BulletContact = { hit: false, grazes: 0 },
 ): BulletContact {
-  const res: BulletContact = { hit: false, grazes: 0 };
+  res.hit = false;
+  res.grazes = 0;
   const px = p.x;
   const py = p.y;
   const vulnerable = p.invuln <= 0;

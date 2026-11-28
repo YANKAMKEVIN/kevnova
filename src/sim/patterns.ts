@@ -40,9 +40,10 @@ export function firePattern(ctx: PatternContext, spec: FireSpec, x: number, y: n
   const aim = Math.atan2(ctx.targetY - sy, ctx.targetX - sx);
   const spin = (spec.spin ?? 0) * t;
   let made = 0;
-  const shoot = (a: number, s = speed, av = angVel): void => {
-    if (ctx.bullets.spawn(sx, sy, a, s, spec.kind, spec.color, acc, av, maxSpd)) made++;
-  };
+  // Pas de fermeture locale : firePattern est appelé des centaines de fois par seconde.
+  const b = ctx.bullets;
+  const kind = spec.kind;
+  const color = spec.color;
 
   switch (spec.pattern) {
     case 'aimed':
@@ -52,7 +53,7 @@ export function firePattern(ctx: PatternContext, spec: FireSpec, x: number, y: n
       const center = spec.pattern === 'aimed' ? aim : base + spin;
       for (let i = 0; i < n; i++) {
         const k = n === 1 ? 0 : i / (n - 1) - 0.5;
-        shoot(center + k * spread);
+        if (b.spawn(sx, sy, center + k * spread, speed, kind, color, acc, angVel, maxSpd)) made++;
       }
       break;
     }
@@ -60,7 +61,7 @@ export function firePattern(ctx: PatternContext, spec: FireSpec, x: number, y: n
     case 'spiral': {
       const n = scaledCount(spec.n ?? 12, ctx.scale.density, 3);
       const off = base + spin + (spec.pattern === 'ring' && spec.spin === undefined ? aim : 0);
-      for (let i = 0; i < n; i++) shoot(off + (i / n) * TAU);
+      for (let i = 0; i < n; i++) if (b.spawn(sx, sy, off + (i / n) * TAU, speed, kind, color, acc, angVel, maxSpd)) made++;
       break;
     }
     case 'flower': {
@@ -68,8 +69,8 @@ export function firePattern(ctx: PatternContext, spec: FireSpec, x: number, y: n
       const av = spec.angVel ?? 0.01;
       for (let i = 0; i < n; i++) {
         const a = base + spin + (i / n) * TAU;
-        shoot(a, speed, av);
-        shoot(a, speed, -av);
+        if (b.spawn(sx, sy, a, speed, kind, color, acc, av, maxSpd)) made++;
+        if (b.spawn(sx, sy, a, speed, kind, color, acc, -av, maxSpd)) made++;
       }
       break;
     }
@@ -77,7 +78,7 @@ export function firePattern(ctx: PatternContext, spec: FireSpec, x: number, y: n
       const n = scaledCount(spec.n ?? 6, ctx.scale.density);
       const spread = spec.spread ?? Math.PI / 2;
       for (let i = 0; i < n; i++) {
-        shoot(base + (ctx.rng.next() - 0.5) * spread, speed * ctx.rng.range(0.7, 1.3));
+        if (b.spawn(sx, sy, base + (ctx.rng.next() - 0.5) * spread, speed * ctx.rng.range(0.7, 1.3), kind, color, acc, angVel, maxSpd)) made++;
       }
       break;
     }
@@ -94,7 +95,7 @@ export function firePattern(ctx: PatternContext, spec: FireSpec, x: number, y: n
     }
     case 'stack': {
       const n = scaledCount(spec.n ?? 4, ctx.scale.density);
-      for (let i = 0; i < n; i++) shoot(aim, speed * (1 + i * 0.22));
+      for (let i = 0; i < n; i++) if (b.spawn(sx, sy, aim, speed * (1 + i * 0.22), kind, color, acc, angVel, maxSpd)) made++;
       break;
     }
   }
